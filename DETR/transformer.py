@@ -3,8 +3,7 @@ import torch
 import torch.nn as nn
 
 
-# num queries : 예측할 object 갯수.
-
+#queries
 class Transformer(nn.Module):
     def __init__(self, d_model=512, nhead=8, num_encoder_layers=6,
                  num_decoder_layers=6, dim_feedforward=2048, dropout=0.1, ):
