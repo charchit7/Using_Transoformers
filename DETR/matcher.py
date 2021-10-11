@@ -4,7 +4,7 @@ import torch.nn as nn
 from torchvision.ops.boxes import box_area
 
 """
-    IoU Utils
+Intersection Over Union Snippets
 """
 
 
