@@ -10,9 +10,9 @@ import config
 from tqdm.notebook import tqdm
 
 """
-    Warning -> trainloader 설정 해줘야함.
+    Warning -> trainloader
     dataset -> images, targets : {'labels' : ~ , 'boxes': ~ }
-    이 때 box는 center coordinates, width, height [0,1]
+    center coordinates, width, height [0,1]
 """
 
 class ResNetFeatures(nn.Module):
@@ -39,7 +39,7 @@ transformer = Transformer(d_model=config.ModelConfig.d_model, nhead=config.Model
                  num_decoder_layers=config.ModelConfig.num_decoder_layers, dim_feedforward=config.ModelConfig.dim_feedforward, dropout=config.ModelConfig.dropout)
 
 
-# Backbone 선언
+# Backbone
 model = torchvision.models.resnet50(pretrained=True)
 backbone = ResNetFeatures(model)
 
@@ -56,11 +56,11 @@ def BN_Freeze(model):
 
 backbone = BN_Freeze(backbone)
 
-# Positional Embedding 선언
+# Positional Embedding 
 
 positional_embedding = PositionalEmbedding(config.ModelConfig.d_model)
 
-# DETR 선언
+# DETR 
 
 detr = DETR(backbone=backbone, positional_embedding=positional_embedding, transformer=transformer, num_classes=config.TrainConfig.classes_num ,num_predict=config.TrainConfig.predict_num)
 param_dicts = [
@@ -81,16 +81,16 @@ DEVICE = torch.device('cuda' if USE_CUDA else 'cpu')
 matcher = HungarianMatcher()
 
 
-def _get_src_permutation_idx(indices):  # matcher에 맞게 index 조정 함수.
+def _get_src_permutation_idx(indices): 
     # permute predictions following indices
     batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
     src_idx = torch.cat([src for (src, _) in indices])
     return batch_idx, src_idx
 
-# Train loader, epochs, box_nums, num_classes 설정 안되어있음.
+# Train loader, epochs, box_nums, num_classes
 for epoch in range(config.TrainConfig.epochs):
     print("Epoch {}/{}".format(epoch+1, config.TrainConfig.epochs))
-    for images, targets in tqdm(train_loader):  # targets -> image_id : , annotations :  -> 'labels' :, 'boxes'로 줘야할 듯.
+    for images, targets in tqdm(train_loader):  # targets -> image_id : , annotations :  -> 'labels' :, 'boxes'
         images = images.to(DEVICE)
         targets = [{k: v.to(DEVICE) for k, v in t.items()} for t in targets]
         outputs = detr(images)  # out = {'pred_logits':  'pred_boxes':}
@@ -99,7 +99,7 @@ for epoch in range(config.TrainConfig.epochs):
         indices = matcher(outputs, targets)
         idx = _get_src_permutation_idx(indices)
 
-        target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])  # targets의 인덱스를 바꿔줌.
+        target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])  
         target_classes = torch.full(outputs['pred_logits'].shape[:2], num_classes=100,
                                     dtype=torch.int64, device=DEVICE)
         target_classes[idx] = target_classes_o
